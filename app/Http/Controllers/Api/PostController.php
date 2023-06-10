@@ -4,16 +4,18 @@ namespace App\Http\Controllers\Api;
 
 use Exception;
 use App\Models\Post;
+use App\Models\Media;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Helpers\ResponseHelper;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\PostDetailsResource;
 use App\Http\Resources\PostResource;
-use App\Models\Category;
-use App\Models\Media;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
-
+use App\Http\Resources\PostDetailsResource;
+use App\Http\Resources\PostEditResource;
+use App\Models\Model;
 
 class PostController extends Controller
 {
@@ -56,8 +58,7 @@ class PostController extends Controller
         ], 
         [
             "category_id.required" => 'The category field is required',
-        ]
-    );
+        ]);
 
     DB::beginTransaction();
     try {
@@ -92,5 +93,55 @@ class PostController extends Controller
        return ResponseHelper::fail($e->getMessage());
     }
    
+  }
+
+//   psot edit
+public function edit ($id) {
+       $posts = Post::where('id' ,$id)->first();
+
+        return ResponseHelper::success(new PostEditResource($posts));
+}
+
+// post update
+public function update ($id,Request $request) {
+       Category::get();
+           $post = Post::findOrFail($id);
+        // $request->validate([
+        //     "title" => 'required|string',
+        //     "description" => 'required|string',
+        //     'category_id' => 'required',
+        // ], 
+        // [
+        //     "category_id.required" => 'The category field is required',
+        // ]);
+
+    DB::beginTransaction();
+    try {
+
+      
+        $post->user_id = auth()->user()->id;
+        $post->title = $request->title;
+        $post->description = $request->description;
+        $post->category_id = $request->category_id;
+        $post->update();
+
+    
+        DB::commit();
+        return ResponseHelper::success([],'Succefully Updated .');
+    } catch (Exception $e) {
+
+        DB::rollBack();
+       return ResponseHelper::fail($e->getMessage());
     }
+}
+  
+  // post delete
+    public function delete ($id){
+       
+        $post = Post::find($id);
+        $post->delete();
+
+        return ResponseHelper::success([],"Succefully Deleted!");
+    }
+
 }

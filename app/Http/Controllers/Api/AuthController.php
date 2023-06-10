@@ -25,7 +25,7 @@ class AuthController extends Controller
         $user->password = Hash::make($request->password);
         $user->save();
 
-        $token = $user->createToken('Blog')->accessToken;
+        $token = $user->createToken('blog')->accessToken;
         return ResponseHelper::success([
             'accept_token' => $token
         ]);
